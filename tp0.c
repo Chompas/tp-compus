@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-// Settings
+// Global constants
 static const int iterations = 50;
 
 int mandelbrot(double cRe, double cIm) {
@@ -31,11 +31,21 @@ int mandelbrot(double cRe, double cIm) {
   return color;
 }
 
+void initPGM(FILE *pgmFile, int width, int height) {
+
+  fprintf(pgmFile, "P5");
+  fprintf(pgmFile,"\n");
+  fprintf(pgmFile, "%d %d", width, height);
+  fprintf(pgmFile,"\n");
+  fprintf(pgmFile, "%d", iterations);
+  fprintf(pgmFile,"\n");
+}
+
 int main(int argc, char *argv[]) {
 
   // Size
-  const int width = 1000;
-  const int height = 1000;
+  const int width = 640;
+  const int height = 480;
 
   // Area
   const double minRe = -2.0;
@@ -46,6 +56,11 @@ int main(int argc, char *argv[]) {
   const double realFactor = (maxRe - minRe) / (width - 1);
   const double imaginaryFactor = (maxIm - minIm) / (height -1);
 
+  // File
+  FILE *fout;
+  fout = fopen("mandelbrot.pgm", "wb");
+  initPGM(fout, width, height);
+
   int color;
 
   for (int y = 0; y < height; y++) {
@@ -55,9 +70,14 @@ int main(int argc, char *argv[]) {
       double cRe = minRe + x * realFactor;
 
       color = mandelbrot(cRe, cIm);
-
-      //TODO: Guardar el color en el archivo en las posiciones x,y
+      fprintf(fout, "%d ", color);
     }
+
+    // New line
+    fprintf( fout, "\n");
   }
+
+
+  fclose(fout);
 
 }
