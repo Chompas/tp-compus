@@ -1,6 +1,7 @@
 #include <getopt.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define TP0_VERSION "Version 1.0 Tp 0 - 6620 Organizacion de Computadoras"
 #define FALSE 0
@@ -94,7 +95,7 @@ int main(int argc, char **argv) {
 
   const double realFactor = (maxRe - minRe) / (width - 1);
   const double imaginaryFactor = (maxIm - minIm) / (height -1);
-  
+
   char *res;
   char *resx;
   char *center;
@@ -106,7 +107,7 @@ int main(int argc, char **argv) {
   short int center_value = FALSE;
   short int o_value = FALSE;
   FILE *fout;
-  
+
   while ((optc = getopt_long (argc, argv, "hvr:c:w:H:o:", longopts, (int *) 0)) != EOF)
   {
     switch (optc)
@@ -115,14 +116,14 @@ int main(int argc, char **argv) {
       usage();
       return 0;
 		break;
-		
+
 		case 'v':
       fprintf (stderr, "\n" );
       fprintf (stderr, TP0_VERSION );
       fprintf (stderr, "\n\n" );
       return 0;
 		break;
-		
+
       case 'r':
       res = optarg;
       res_value = TRUE;
@@ -130,22 +131,22 @@ int main(int argc, char **argv) {
 
       case 'c':
 		center = optarg;
-		center_value = TRUE;		
+		center_value = TRUE;
 		break;
 
       case 'w':
 		w = atoi(optarg);
 		break;
-		
+
 		case 'H':
 		h = atoi(optarg);
 		break;
-		
+
 		case 'o':
 		output = optarg;
 		o_value = TRUE;
 		break;
-		
+
 		case '?':
 		fprintf(stderr, "Opcion invalida-%c\n", optc);
       return 1;
@@ -155,18 +156,18 @@ int main(int argc, char **argv) {
 		return 0;
      }
   }
-  
+
   /*Resolucion*/
   if(res_value == TRUE){
     resx = strstr( res, "x" );
     if ( resx == NULL ||  /* Si nos tiene x */
          resx == res || /* Si la x esta al principio */
-         resx == &res[strlen(res)-1] ) /* Si la x esta al final */ 
+         resx == &res[strlen(res)-1] ) /* Si la x esta al final */
     {
         fprintf(stderr, "Error al parsear resolucion -%s\n", res);
         return 0;
-    }  
-    /* width */ 
+    }
+    /* width */
     resx = strstr( res, "x" );
     char *p = res;
     int i = 0;
@@ -174,21 +175,21 @@ int main(int argc, char **argv) {
     while( p!=NULL && p != resx ) {
       num[i] = *p; i++; p++;
     }
-    num[i] = 0; 
+    num[i] = 0;
     width = atoi( num );
 
     /* height */
     i = 0;
     resx = &res[strlen(res)-1];
-    while ( p!=NULL && p != resx ) {  
+    while ( p!=NULL && p != resx ) {
       p++; num[i] = *p; i++;
     }
-    num[i] = 0; 
+    num[i] = 0;
     height = atoi( num );
     p++;
-    
+
   	}
-  	
+
   	//Center
   	if(center_value == TRUE) {
   		cen = strstr(center,"+");
@@ -198,14 +199,14 @@ int main(int argc, char **argv) {
   			fprintf(stderr, "Error al parsear centro -%s\n", center);
          return 0;
   			}
-  		
+
   		cen = strstr(center,"i");
   		if(cen == NULL || /*Si no tiene el i */
   			cen != &center[strlen(center)-1]){ /*Si el i no esta al final*/
   			fprintf(stderr, "Error al parsear centro -%s\n", center);
          return 0;
   			}
-  		
+
   		/*Parte real*/
   		cen = strstr( center, "+" );
       char *p = center;
@@ -214,24 +215,24 @@ int main(int argc, char **argv) {
       while( p!=NULL && p != cen ) {
         num[i] = *p; i++; p++;
       }
-      num[i] = 0; 
+      num[i] = 0;
       centerRe = atoi( num );
-      
+
       /*Parte imaginaria*/
     	i = 0;
     	cen = &center[strlen(center)-2];
-    	while ( p!=NULL && p != cen ) {  
+    	while ( p!=NULL && p != cen ) {
       	p++; num[i] = *p; i++;
     	}
-    	num[i] = 0; 
+    	num[i] = 0;
     	centerIm = atoi( num );
     	p++;
   	}
-  	
+
   	maxRe = centerRe+(w/2);
   	minRe = centerRe-(w/2);
   	maxIm = centerIm+(h/2);
-  	minIm = centerIm-(h/2);  	
+  	minIm = centerIm-(h/2);
 
   // File
   if(o_value == TRUE){
@@ -249,7 +250,7 @@ int main(int argc, char **argv) {
   else{
   	fout = stdout;
   }
-    
+
   initPGM(fout, width, height);
 
   int color;
