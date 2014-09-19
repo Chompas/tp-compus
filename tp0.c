@@ -86,8 +86,8 @@ int main(int argc, char **argv) {
   double maxRe = 2.0;
   double minIm = -2.0;
   double maxIm = 2.0;
-  int centerRe = 0;
-  int centerIm = 0;
+  double centerRe = 0.0;
+  double centerIm = 0.0;
 
   const double realFactor = (maxRe - minRe) / (width - 1);
   const double imaginaryFactor = (maxIm - minIm) / (height -1);
@@ -96,9 +96,11 @@ int main(int argc, char **argv) {
   char *resx;
   char *center;
   char *cen;
+  char *pos;
+  char *neg;
   char *output;
-  int w = 4;
-  int h = 4;
+  double w = 4.0;
+  double h = 4.0;
   short int res_value = FALSE;
   short int center_value = FALSE;
   short int o_value = FALSE;
@@ -129,11 +131,11 @@ int main(int argc, char **argv) {
         break;
 
       case 'w':
-        w = atoi(optarg);
+        w = atof(optarg);
         break;
 
       case 'H':
-        h = atoi(optarg);
+        h = atof(optarg);
         break;
 
       case 'o':
@@ -142,7 +144,7 @@ int main(int argc, char **argv) {
         break;
 
       case '?':
-        fprintf(stderr, "Opcion invalida-%c\n", optc);
+        fprintf(stderr, "fatal: invalid option -%c\n", optc);
         return 1;
 
       default:
@@ -159,7 +161,7 @@ int main(int argc, char **argv) {
         resx == res || /* Si la x esta al principio */
         resx == &res[strlen(res)-1] ) { /* Si la x esta al final */
 
-          fprintf(stderr, "Error al parsear resolucion -%s\n", res);
+          fprintf(stderr, "fatal: invalid resolution specification: -%s\n", res);
           return 0;
     }
 
@@ -192,23 +194,35 @@ int main(int argc, char **argv) {
 
   	// Center
   	if(center_value == TRUE) {
-  		cen = strstr(center,"+");
-  		if(cen == NULL || /*Si no tiene el + */
-  			cen == center || /*Si el + esta al principio */
-  			cen == &center[strlen(center)-1]){ /*Si el + esta al final*/
-          fprintf(stderr, "Error al parsear centro -%s\n", center);
+  		pos = strstr(center,"+");
+  		neg = strstr(center,"-");
+  		if(pos == NULL && neg == NULL){ /*no contiene ni + ni - */
+          fprintf(stderr, "fatal: invalid center specification: %s\n", center);
           return 0;
   		}
+  		else if(pos != NULL && pos == &center[strlen(center)-1]){ 
+          fprintf(stderr, "fatal: invalid center specification: %s\n", center);
+          return 0;
+  		}
+  		else if(neg != NULL && neg == &center[strlen(center)-1]) {
+  			 fprintf(stderr, "fatal: invalid center specification: %s\n", center);
+          return 0;
+  		}  		
 
   		cen = strstr(center,"i");
   		if(cen == NULL || /*Si no tiene el i */
   			cen != &center[strlen(center)-1]){ /*Si el i no esta al final*/
-          fprintf(stderr, "Error al parsear centro -%s\n", center);
+          fprintf(stderr, "fatal: invalid center specification: %s\n", center);
           return 0;
   			}
+  		
 
   		// Parte real
-  		cen = strstr( center, "+" );
+  		cen = strrchr( center, '+' );  		
+  		if(cen == NULL || cen == center){
+  			cen = strrchr( center, '-' );
+  		}
+  		
       char *p = center;
       int i = 0;
       char num[32];
@@ -218,20 +232,22 @@ int main(int argc, char **argv) {
       }
 
       num[i] = 0;
-      centerRe = atoi( num );
+      centerRe = atof( num );
 
       // Parte imaginaria
     	i = 0;
-    	cen = &center[strlen(center)-2];
+    	cen = &center[strlen(center)-1];
 
     	while ( p!=NULL && p != cen ) {
-      	p++; num[i] = *p; i++;
+      	num[i] = *p; i++;p++;
     	}
 
     	num[i] = 0;
-    	centerIm = atoi( num );
+    	centerIm = atof( num );
     	p++;
   	}
+  	
+  	//fprintf(stdout,"%f %f\n",centerRe,centerIm);
 
   	maxRe = centerRe+(w/2);
   	minRe = centerRe-(w/2);
@@ -247,7 +263,7 @@ int main(int argc, char **argv) {
     }
 
     if ( fout == NULL ) {
-      fprintf(stderr, "Error al abrir archivo output -%s\n", output);
+      fprintf(stderr, "fatal: cannot open output file: %s\n", output);
       return 0;
     }
   } else {
