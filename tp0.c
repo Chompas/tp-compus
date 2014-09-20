@@ -89,9 +89,6 @@ int main(int argc, char **argv) {
   double centerRe = 0.0;
   double centerIm = 0.0;
 
-  const double realFactor = (maxRe - minRe) / (width - 1);
-  const double imaginaryFactor = (maxIm - minIm) / (height -1);
-
   char *res;
   char *resx;
   char *center;
@@ -153,7 +150,8 @@ int main(int argc, char **argv) {
     }
   }
 
-  /*Resolucion*/
+  // Check options
+
   if(res_value == TRUE) {
     resx = strstr( res, "x" );
 
@@ -200,14 +198,14 @@ int main(int argc, char **argv) {
           fprintf(stderr, "fatal: invalid center specification: %s\n", center);
           return 0;
   		}
-  		else if(pos != NULL && pos == &center[strlen(center)-1]){ 
+  		else if(pos != NULL && pos == &center[strlen(center)-1]){
           fprintf(stderr, "fatal: invalid center specification: %s\n", center);
           return 0;
   		}
   		else if(neg != NULL && neg == &center[strlen(center)-1]) {
   			 fprintf(stderr, "fatal: invalid center specification: %s\n", center);
           return 0;
-  		}  		
+  		}
 
   		cen = strstr(center,"i");
   		if(cen == NULL || /*Si no tiene el i */
@@ -215,14 +213,14 @@ int main(int argc, char **argv) {
           fprintf(stderr, "fatal: invalid center specification: %s\n", center);
           return 0;
   			}
-  		
+
 
   		// Parte real
-  		cen = strrchr( center, '+' );  		
+  		cen = strrchr( center, '+' );
   		if(cen == NULL || cen == center){
   			cen = strrchr( center, '-' );
   		}
-  		
+
       char *p = center;
       int i = 0;
       char num[32];
@@ -246,13 +244,13 @@ int main(int argc, char **argv) {
     	centerIm = atof( num );
     	p++;
   	}
-  	
+
   	//fprintf(stdout,"%f %f\n",centerRe,centerIm);
 
-  	maxRe = centerRe+(w/2);
-  	minRe = centerRe-(w/2);
-  	maxIm = centerIm+(h/2);
-  	minIm = centerIm-(h/2);
+  maxRe = centerRe+(w/2);
+  minRe = centerRe-(w/2);
+  maxIm = centerIm+(h/2);
+  minIm = centerIm-(h/2);
 
   // File
   if(o_value == TRUE) {
@@ -269,6 +267,12 @@ int main(int argc, char **argv) {
   } else {
   	fout = stdout;
   }
+
+  // Start drawing
+
+  // Factor between pixels
+  const double realFactor = (maxRe - minRe) / (width - 1);
+  const double imaginaryFactor = (maxIm - minIm) / (height -1);
 
   initPGM(fout, width, height);
 
