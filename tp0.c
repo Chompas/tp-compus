@@ -9,7 +9,7 @@
 #define TRUE  1
 
 // Global constants
-static const int iterations = 50;
+static const int iterations = 255;
 
 int mandelbrot(double cRe, double cIm) {
   double zRe = cRe;
