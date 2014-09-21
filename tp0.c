@@ -17,7 +17,7 @@ int mandelbrot(double cRe, double cIm) {
 
   int color = 0;
   int n = 0;
-  for (n = 0; n < iterations; n++) {
+  for (n = 0; n <= iterations; n++) {
     double zRe2 = zRe * zRe;
     double zIm2 = zIm * zIm;
 
