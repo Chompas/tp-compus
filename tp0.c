@@ -271,10 +271,10 @@ int main(int argc, char **argv) {
   // Start drawing
 
   // Factor between pixels
-  //const double realFactor = (maxRe - minRe) / (width - 1);
-  //const double imaginaryFactor = (maxIm - minIm) / (height -1);
-  const double realFactor = ((maxRe - minRe) / (width)) / 2;
-  const double imaginaryFactor = ((maxIm - minIm) / (height)) / 2;
+  const double realFactor = (maxRe - minRe) / (width);
+  const double imaginaryFactor = (maxIm - minIm) / (height);
+  //const double realFactor = ((maxRe - minRe) / (width)) / 2;
+  //const double imaginaryFactor = ((maxIm - minIm) / (height)) / 2;
 
   initPGM(fout, width, height);
 
@@ -282,11 +282,30 @@ int main(int argc, char **argv) {
   int y = 0;
   int x = 0;
 
+  double yFactor;
+  double xFactor;
+
   for (y = 1; y <= height; y++) {
-    double cIm = maxIm - y * imaginaryFactor;
+
+    // The edges start from half of the factor
+    if (y == 1) {
+      yFactor = imaginaryFactor / 2;
+    } else {
+      yFactor = imaginaryFactor;
+    }
+
+    double cIm = maxIm - y * yFactor;
 
     for (x = 1; x <= width; x++) {
-      double cRe = minRe + x * realFactor;
+
+      if (x == 1) {
+        xFactor = realFactor / 2;
+      } else {
+        xFactor = realFactor;
+      }
+
+      double cRe = minRe + x * xFactor;
+      
       color = mandelbrot(cRe, cIm);
       fprintf(fout, "%d ", color);
     }
