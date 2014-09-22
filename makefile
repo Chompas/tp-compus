@@ -3,3 +3,5 @@ tp0: tp0.o
 
 clean:
 	rm -f *.o tp0
+
+tp: clean tp0

@@ -174,6 +174,10 @@ int main(int argc, char **argv) {
     }
 
     num[i] = 0;
+    if(atoi( num ) <= 0) {
+    	usage();
+    	return 0;
+    }
     width = atoi( num );
 
     // Height
@@ -185,6 +189,10 @@ int main(int argc, char **argv) {
     }
 
     num[i] = 0;
+    if(atoi( num ) <= 0) {
+    	usage();
+    	return 0;
+    }
     height = atoi( num );
     p++;
 
