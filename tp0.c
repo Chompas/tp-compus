@@ -290,36 +290,27 @@ int main(int argc, char **argv) {
   int y = 0;
   int x = 0;
 
-  double yFactor;
-  double xFactor;
 
-  for (y = 1; y <= height; y++) {
+  // The edges start from half of the factor
+  double cInitIm = maxIm - (imaginaryFactor / 2);
+  double cInitRe = minRe + (realFactor / 2);
 
-    // The edges start from half of the factor
-    if (y == 1) {
-      yFactor = imaginaryFactor / 2;
-    } else {
-      yFactor = imaginaryFactor;
-    }
+  for (y = 0; y < height; y++) {
 
-    double cIm = maxIm - y * yFactor;
+    double cIm = cInitIm - y * imaginaryFactor;
 
-    for (x = 1; x <= width; x++) {
+    for (x = 0; x < width; x++) {
 
-      if (x == 1) {
-        xFactor = realFactor / 2;
-      } else {
-        xFactor = realFactor;
-      }
+      double cRe = cInitRe + x * realFactor;
 
-      double cRe = minRe + x * xFactor;
-      
       color = mandelbrot(cRe, cIm);
       fprintf(fout, "%d ", color);
+
     }
 
     // New line
     fprintf( fout, "\n");
+
   }
 
 
