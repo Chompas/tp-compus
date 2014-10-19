@@ -28,14 +28,14 @@ mips32_plot:
 
   lw    t0,TAM_FRAME(sp)
   lw    a0,36(t0)            #llamo a fprintf para imprimir P2 en el header
-  lw    a1,p2
+  la    a1,p2
   la    t9,fprintf
   jal   ra,t9
 
   lw    t0,TAM_FRAME(sp)     #ver si es necesario cargarlo siempre
   lw    t1,TAM_FRAME(sp)
   lw    a0,36(t0)            #imprimo x_res
-  lw    a1,u_format
+  la    a1,u_format
   lw    a2,24(t1)
   la    t9,fprintf
   jal   ra,t9
@@ -43,7 +43,7 @@ mips32_plot:
   lw    t0,TAM_FRAME(sp)
   lw    t1,TAM_FRAME(sp)
   lw    a0,36(t0)            #imprimo y_res
-  lw    a1,u_format
+  la    a1,u_format
   lw    a2,28(t0)
   la    t9,fprintf
   jal   ra,t9
@@ -51,7 +51,7 @@ mips32_plot:
   lw    t0,TAM_FRAME(sp)
   lw    t1,TAM_FRAME(sp)
   lw    a0,36(t0)            #imprimo shades
-  lw    a1,u_format
+  la    a1,u_format
   lw    a2,32(t1)
   la    t9,fprintf
   jal   ra,t9
@@ -80,7 +80,7 @@ for2:
   lw    t0, 44(sp)    #cargo x
   lw    t1, TAM_FRAME(sp)
   lw    t2, 24(t1)    #cargo parms->x_res
-  bge   to,t2,endFor2	# si x < x_res entra al for2 sino va a endFor2
+  bge   t0,t2,endFor2	# si x < x_res entra al for2 sino va a endFor2
 
   lw    t0, 16(sp)    #cargo cr
   sw    t0, 24(sp)    #guardo zr = cr
@@ -100,12 +100,12 @@ for3:
 if1:
 
   lw    t0,24(sp)       # cargo zr
-  mul	  f0,t0, t0 		  # f0 es zr*zr
+  mul	  t2,t0,t0 		    # t2 es zr*zr
   lw    t1,28(sp)
-  mul	  f1,t1,t1     		# f1 es zi*zi
-  addu  f3,f0,f1    		# f3 es la suma de f1 y f0
-  sw    f3,40(sp)       # absz = f3
-  slti  v0,f3,4   			# si es menor que 4
+  mul	  t3,t1,t1     		# t3 es zi*zi
+  addu  t4,t2,t3    		# t4 = t2 + t3
+  sw    t4,40(sp)       # absz = t4
+  sltu  v0,t4,4   			# si es menor que 4
   bne	  v0,zero,endIf1 	  # si es menor a 4 rompe el ciclo
 
   lw    t0,24(sp)       # calculo zr * zr * zr
@@ -138,10 +138,10 @@ if1:
   addu	t4,t4,t1			  # si + ci
   sw    t4,36(sp) 			# guardo el resultado en si
 
-  lw    t0,32(sr)
+  lw    t0,32(sp)
   sw    t0,24(sp)       #zr = sr
 
-  lw    t1,36(sr)
+  lw    t1,36(sp)
   sw    t0,28(sp)       #zi = si
 
 endIf1:
@@ -163,7 +163,7 @@ endFor3:
 
   lw    t0,44(sp)    #cargo x
   addi  t0,t0,1       #++x
-  sw    to,44(sp)
+  sw    t0,44(sp)
   lw    t2,TAM_FRAME(sp)
   lw  	t3,16(t2)			# cargo d_re
   lw    t4,16(sp)      # cargo cr
@@ -178,7 +178,7 @@ if2:
   la    t9,fprintf
   jal   ra,t9
 
-  lw    v0, SYS_EXIT  #exit(1)
+  lw    v0, SYS_exit  #exit(1)
   lw    a1,1
   syscall
 
@@ -207,7 +207,7 @@ if3:
   la    t9,fprintf
   jal   ra,t9
 
-  lw    v0, SYS_EXIT  #exit(1)
+  lw    v0, SYS_exit  #exit(1)
   lw    a1,1
   syscall
 
