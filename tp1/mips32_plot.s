@@ -32,7 +32,7 @@ mips32_plot:
   la    t9,fprintf
   jal   ra,t9
 
-  lw    t0,TAM_FRAME(sp)     #TODO: ver si es necesario cargarlo siempre
+  lw    t0,TAM_FRAME(sp)     #ver si es necesario cargarlo siempre
   lw    t1,TAM_FRAME(sp)
   lw    a0,36(t0)            #imprimo x_res
   lw    a1,u_format
@@ -56,71 +56,123 @@ mips32_plot:
   la    t9,fprintf
   jal   ra,t9
 
-
-  lw    t0, TAM_FRAME(sp)
+  li 	  t0, 0       		# guardo en t0 y = 0
+  sw    t0, 48(sp)      # guardo y = 0
   lw    t1, TAM_FRAME(sp)
-  li 	  t1, 0       		# guardo en t1 y = 0
   lw 	  t2, 4(t1)  			# ci = UL_im
-  lw 	  t3, 28(t1)			# en t3 guardo y_res
+  sw    t2, 20(sp)      # guardo ci
 
-loop1:
+for1:
 
-  addi	t1, t1, 1			# ++y
-  lw  	t4, 20(t1)			# cargo d_im
-  subu 	t2, t2, t4			# ci -= d_im
-  sltu	$v0,$t1,$t3
-  bne	  $v0,$zero,$loop2	# si y < y_res entra al 2do for
+  lw    t0, 48(sp)      # cargo y
+  lw    t1, TAM_FRAME(sp)
+  lw 	  t2, 28(t1)			# cargo y_res
+  bge	  t0, t1, if3	    # si y < y_res entra al for1 sino va a if3
 
-loop2:
+  li    t0, 0
+  sw    t0, 44(sp)    # guardo x = 0
+  lw    t1, TAM_FRAME(sp)
+  lw    t2, 0(t1)			# cargo en t2 cr = parms->UL_re
+  sw    t2, 16(sp)    # guardo cr = parms->UL_re
 
-  li    t5, 0				# cargo en t5 x=0
-  lw    t6, 0(t1)			# cargo en t6 cr = parms->UL_re
-  lw    t7, 24(t1)			# cargo en t7 x_res
-  sltu	$v0,$t5,$t7
-  bne   $v0,$zero,$loop2	# si x < x_res entra al 3do loop
+for2:
 
-loop3:
+  lw    t0, 44(sp)    #cargo x
+  lw    t1, TAM_FRAME(sp)
+  lw    t2, 24(t1)    #cargo parms->x_res
+  bge   to,t2,endFor2	# si x < x_res entra al for2 sino va a endFor2
 
-  li    t8,	0 				# cargo en t8  c = 0
-  lw    t9, 32(t1)			# TODO: CASI SEGURO NO SE PUEDE USAR t9, arreglarlo despues, cargo shades en t9
-  sltu 	$v0, $t8, $t9
-  bne 	$v0, $zero, $loop4  # si c < parms->shades va a loop 4
+  lw    t0, 16(sp)    #cargo cr
+  sw    t0, 24(sp)    #guardo zr = cr
+  lw    t1, 20(sp)    #cargo ci
+  sw    t1, 28(sp)    #guardo zi = ci
 
-loop4:
+  li    t0, 0
+  sw    t0, 52(sp)    #guardo c=0
 
-  addiu	t8, t8, 1
-  mul	  $f0, $t6, $t6 		# f0 es zr*zr
-  mul	  $f1, $t2, $t2 		# f1 es zi*zi
-  addu  $f3, $f0, $f1		# f3 es la suma de f1 y f2
-  slti  $v0, $f3, 4			# si es menor que 4
-  bne	  $v0, $zero, $fin	# si es menor a 4 rompe el ciclo
+for3:
 
-  mul 	t4, $f0, t2			# guardo en t4 zr * zr * zi f0 es zr*zr
-  mul 	t5, t4, 3			# TODO: multiplico por 3, pero creo que falta un li para el 3
-  subu	t4, t4, t5
-  addu	t4, t4, t6			# le sumo cr = zr
-  sw 	  t4, 24(sp)			#nose si esta bien, guardo el resultado en zr
-
-  mul 	t4, $f1, t2			# guardo en t4 zi * zi * zi f1 es zi*zi
-  mul 	t5, t4, 3			  # TODO: multiplico por 3, pero creo que falta un li para el 3
-  subu	t4, t4, t5
-  addu	t4, t4, t2			# le sumo ci = zi
-  sw    t4, 28(sp)			# guardo el resultaod en zi
-  sw 	  t8, 52(sp)			#guardo C en 52 del sp
-
-
-  lw    t0,TAM_FRAME(sp)
-  lw    t1,TAM_FRAME(sp)
-  lw    a0,36(t0)            #imprimo shades
-  lw    a1,u_format
-  lw    a2,36(t1)			# cargo FP
-  lw 	  a3,52(sp)			# TODO: cargo C, verifiacr si esta bien
-  la    t9,fprintf
-  jal   ra,t9
+  lw    t0,	52(sp)  		# cargo c
+  lw    t1, TAM_FRAME(sp)
+  lw    t2, 32(t1)			# cargo shades
+  bge 	t0, t2, endFor3  # si c < parms->shades entra a for3 sino va a endFor3
 
 if1:
 
+  lw    t0,24(sp)       # cargo zr
+  mul	  f0,t0, t0 		  # f0 es zr*zr
+  lw    t1,28(sp)
+  mul	  f1,t1,t1     		# f1 es zi*zi
+  addu  f3,f0,f1    		# f3 es la suma de f1 y f0
+  sw    f3,40(sp)       # absz = f3
+  slti  v0,f3,4   			# si es menor que 4
+  bne	  v0,zero,endIf1 	  # si es menor a 4 rompe el ciclo
+
+  lw    t0,24(sp)       # calculo zr * zr * zr
+  mul 	t1,t0,t0			  # t1 = zr * zr
+  mul 	t1,t1,t0			  # t1 = t1 * zr
+  sw    t1,32(sp)       # sr = t1
+  lw    t2,28(sp)       # calculo 3 * zi * zi * zr
+  mul 	t3,t2,t2			  # t3 = zi * zi
+  lw    t4,24(sp)
+  mul 	t3,t3,t4			  # t3 = t3 * zr
+  mul 	t3,t3,3  			  # t3 = t3 * 3
+  lw    t4,32(sp)
+  subu	t4,t4,t3        # sr - t3
+  lw    t5,16(sp)
+  addu	t4,t4,t5			  # le sumo sr + cr
+  sw 	  t4,32(sp)			  #guardo sr
+
+  lw    t0,24(sp)       # calculo 3 * zr * zr * zi
+  mul 	t1,t0,t0			  # t1 = zr * zr
+  lw    t2,28(sp)
+  mul 	t1,t1,t2			  # t1 = t1 * zi
+  mul 	t1,t1,3  			  # t1 = t1 * 3
+  sw    t1,36(sp)       # si = t1
+  mul   t3,t2,t2        # t3 = zi * zi
+  mul   t3,t3,t2        # t3 = t3 * zi
+  lw    t1,36(sp)
+  subu	t1,t1,t3        # si - t3
+  sw    t1,36(sp)
+  lw    t4,20(sp)
+  addu	t4,t4,t1			  # si + ci
+  sw    t4,36(sp) 			# guardo el resultado en si
+
+  lw    t0,32(sr)
+  sw    t0,24(sp)       #zr = sr
+
+  lw    t1,36(sr)
+  sw    t0,28(sp)       #zi = si
+
+endIf1:
+  lw    t0,52(sp)     #cargo c
+  addi  t0,t0,1       #++c
+  sw    t0,52(sp)
+  b     for3
+
+endFor3:
+
+  lw    t0,TAM_FRAME(sp)
+  lw    a0,36(t0)       # cargo FP
+  lw    a1,u_format
+  lw    a2,52(sp)			  # cargo C
+  la    t9,fprintf      # imprimo shades
+  jal   ra,t9
+
   bge   v0,0,if2
+
+  lw    t0,44(sp)    #cargo x
+  addi  t0,t0,1       #++x
+  sw    to,44(sp)
+  lw    t2,TAM_FRAME(sp)
+  lw  	t3,16(t2)			# cargo d_re
+  lw    t4,16(sp)      # cargo cr
+  addu 	t4,t4, t3			# cr += d_re
+  sw    t4,16(sp)      # guardo cr
+  b     for2
+
+if2:
+
   lw    a0,2          #imprimo mesaje de error por stderr
   lw    a1,io_error
   la    t9,fprintf
@@ -130,9 +182,21 @@ if1:
   lw    a1,1
   syscall
 
-if2:
+endFor2:
 
-  lw    t0,TAM_FRAME(sp)
+  lw    t1,48(sp)     # cargo y
+  addi	t1,t1, 1			# ++y
+  sw    t1,48(sp)     # guardo y
+  lw    t2,TAM_FRAME(sp)
+  lw  	t3,20(t2)			# cargo d_im
+  lw    t4,20(sp)     # cargo ci
+  subu 	t4,t4,t3			# ci -= d_im
+  sw    t4,20(sp)     # guardo ci
+  b     for1
+
+if3:
+
+  lw    t0,TAM_FRAME(sp)  #flush
   lw    a0,36(t0)
   la    t9,fflush
   jal   ra,t9

@@ -38,12 +38,14 @@ mips32_plot:
 	sw	$fp,68($sp)
 	sw	$gp,64($sp)
 	move	$fp,$sp
-	sw	$a0,80($fp)
+
+	sw	$a0,80($fp)			#imprime header
 	lw	$v0,80($fp)
 	lw	$a0,36($v0)
 	la	$a1,$LC0
 	la	$t9,fprintf
 	jal	$ra,$t9
+
 	lw	$v0,80($fp)
 	lw	$v1,80($fp)
 	lw	$a0,36($v0)
@@ -51,6 +53,7 @@ mips32_plot:
 	lw	$a2,24($v1)
 	la	$t9,fprintf
 	jal	$ra,$t9
+
 	lw	$v0,80($fp)
 	lw	$v1,80($fp)
 	lw	$a0,36($v0)
@@ -58,13 +61,15 @@ mips32_plot:
 	lw	$a2,28($v1)
 	la	$t9,fprintf
 	jal	$ra,$t9
+
 	lw	$v0,80($fp)
 	lw	$v1,80($fp)
 	lw	$a0,36($v0)
 	la	$a1,$LC1
 	lw	$a2,32($v1)
 	la	$t9,fprintf
-	jal	$ra,$t9
+	jal	$ra,$t9					#fin imprime header
+
 	sw	$zero,56($fp)
 	lw	$v0,80($fp)
 	l.s	$f0,4($v0)
