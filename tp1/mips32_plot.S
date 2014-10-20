@@ -66,7 +66,7 @@ for1:
   lw    t0, 48(sp)      # cargo y
   lw    t1, TAM_FRAME(sp)
   lw 	  t2, 28(t1)			# cargo y_res
-  bge	  t0, t1, if3	    # si y < y_res entra al for1 sino va a if3
+  bge	  t0, t2, if3	    # si y < y_res entra al for1 sino va a if3
 
   sw    zero, 44(sp)    # guardo x = 0
   lw    t1, TAM_FRAME(sp)
