@@ -220,10 +220,10 @@ if3:
   #jal   ra,t9
 
   li	v0, SYS_write
-  li	a0, 2         # a0: stderr file descriptor.
-  la	a1, f_error   # a1: mensaje de error.
-  li	a2, 26	      # a2: data length
-  syscall
+	li	a0, 2         # a0: stderr file descriptor.
+	la	a1, f_error   # a1: mensaje de error.
+	li	a2, 26	      # a2: data length
+	syscall
 
   li    v0, SYS_exit  #exit(1)
   li    a0,1
