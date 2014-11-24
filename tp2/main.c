@@ -49,9 +49,6 @@ typedef struct {
 	void (*plot)(param_t *);
 } METHOD;
 
-#ifndef USE_SSE_ASSEMBLY
-	#warning "USE_SSE_ASSEMBLY no definido"
-#endif
 static METHOD methods[] = {
 #ifdef USE_SSE_ASSEMBLY
 	{ "sse", sse_plot },
@@ -167,6 +164,10 @@ do_usage(const char *name, int status)
 	                " Change the height of the spanned region.\n");
 	fprintf(stderr, "  -o, --output     "
 	                " Path to output file.\n");
+	fprintf(stderr, "  -m, --method     "
+									" Change method used to generate output.\n");
+	fprintf(stderr, "  -n, --nthreads     "
+									" Set threads used to compute output.\n");
 	fprintf(stderr, "Examples:\n");
 	fprintf(stderr, "  %s -o output.pgm\n", name);
 	fprintf(stderr, "  %s -r 1600x1200 -o output.pgm\n", name);
