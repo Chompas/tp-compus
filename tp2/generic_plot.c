@@ -15,17 +15,17 @@ generic_plot(param_t *parms)
 	int x, y;
 	int c;
 
-	/* 
-	 * Barremos la región rectangular del plano complejo comprendida 
+	/*
+	 * Barremos la regiï¿½n rectangular del plano complejo comprendida
 	 * entre (parms->UL_re, parms->UL_im) y (parms->LR_re, parms->LR_im).
-	 * El parámetro de iteración es el punto (cr, ci).
+	 * El parï¿½metro de iteraciï¿½n es el punto (cr, ci).
 	 */
-	
+
 	ci = parms->UL_im - parms->y0 * parms->d_im;
 	u8 = parms->bitmap + parms->y0 * parms->x_res;
 
 	for (y = parms->y0; y < parms->y1; ++y) {
-		cr = parms->UL_re; 
+		cr = parms->UL_re;
 
 		for (x = 0; x < parms->x_res; ++x) {
 			zr = cr;
@@ -33,16 +33,17 @@ generic_plot(param_t *parms)
 
 			/*
 			 * Determinamos el nivel de brillo asociado al punto
-			 * (cr, ci), usando la fórmula compleja recurrente 
+			 * (cr, ci), usando la fï¿½rmula compleja recurrente
 			 * f = f^3 + c.
 			 */
 			for (c = 0; c < parms->shades; ++c) {
 				if ((absz = zr*zr + zi*zi) >= 4.0f)
 					break;
-				sr = zr * zr 
-				   - zi * zi
+				sr = zr * zr * zr
+				   - 3 * zi * zi * zr
 				   + cr;
-				si = 2 * zr * zi
+				si = 3 * zr * zr * zi
+					 - zi * zi * zi
 				   + ci;
 				zr = sr;
 				zi = si;

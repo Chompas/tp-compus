@@ -29,16 +29,18 @@ extern void generic_plot(param_t *);
 extern void sse_plot(param_t *);
 
 /*
- * Parámetros globales.
+ * Parï¿½metros globales.
  */
 
 int x_res = 640;		/* Ancho de imagen por defecto. */
 int y_res = 480;		/* Alto de imagen, por defecto. */
-float upper_left_re = +0.2795;	/* Extremo superior izquierzo (re). */
-float upper_left_im = -0.0075;	/* Extremo superior izquierzo (im). */
-float lower_right_re = +0.2845;	/* Extremo inferior derecho (re). */
-float lower_right_im = -0.0125;	/* Extremo inferior derecho (im). */
-size_t nthreads = 1;            /* Cantidad de threads de cómputo. */
+
+float upper_left_re = -0.65;	/* Extremo superior izquierzo (re). */
+float upper_left_im = +0.30;	/* Extremo superior izquierzo (im). */
+float lower_right_re = -0.55;	/* Extremo inferior derecho (re). */
+float lower_right_im = +0.20;	/* Extremo inferior derecho (im). */
+
+size_t nthreads = 1;            /* Cantidad de threads de cï¿½mputo. */
 FILE *output;
 void (*plot)(param_t *);
 
@@ -47,6 +49,9 @@ typedef struct {
 	void (*plot)(param_t *);
 } METHOD;
 
+#ifndef USE_SSE_ASSEMBLY
+	#warning "USE_SSE_ASSEMBLY no definido"
+#endif
 static METHOD methods[] = {
 #ifdef USE_SSE_ASSEMBLY
 	{ "sse", sse_plot },
@@ -98,7 +103,7 @@ parse_cmdline(int argc, char * const argv[])
 		{"output", required_argument, NULL, 'o'},
 	};
 
-	while ((ch = getopt_long(argc, argv, 
+	while ((ch = getopt_long(argc, argv,
 	                         "hc:H:m:n:o:r:w:g:V", options, &index)) != -1) {
 		switch (ch) {
 		case 'h':
@@ -210,8 +215,8 @@ do_geometry(const char *name, const char *spec)
 #define PLUS_OR_MINUS(c)  ((c) == '+' || (c) == '-')
 #define IMAGINARY_UNIT(x) ((x) == 'i' || (x) == 'j')
 
-	if (sscanf(spec, 
-	           "%lf %c %lf %c %c %lf %c %lf %c %c", 
+	if (sscanf(spec,
+	           "%lf %c %lf %c %c %lf %c %lf %c %c",
 	           &re_1,
 	           &sg_1,
 	           &im_1,
@@ -240,7 +245,7 @@ do_geometry(const char *name, const char *spec)
 	im_2 *= SIGN(sg_2);
 
 	/*
-	 * We have two edges of the rectangle. Now, find the upper-left 
+	 * We have two edges of the rectangle. Now, find the upper-left
 	 * (i.e. the one with minimum real part and maximum imaginary
 	 * part) and lower-right (maximum real part, minimum imaginary)
 	 * corners of the rectangle.
@@ -261,8 +266,8 @@ do_center(const char *name, const char *spec)
 	char sg;
 	char ch;
 
-	if (sscanf(spec, 
-	           "%lf %c %lf %c %c", 
+	if (sscanf(spec,
+	           "%lf %c %lf %c %c",
 	           &re,
 	           &sg,
 	           &im,
@@ -292,8 +297,8 @@ do_height(const char *name, const char *spec)
 	double re, im;
 	char ch;
 
-	if (sscanf(spec, 
-	           "%lf %c", 
+	if (sscanf(spec,
+	           "%lf %c",
 	           &height,
 	           &ch) != 1
 	    || height <= 0.0) {
@@ -317,7 +322,7 @@ do_nthreads(const char *name, const char *spec)
 	int nt;
 	char c;
 
-	if (sscanf(spec, "%d %c", &nt, &c) != 1 
+	if (sscanf(spec, "%d %c", &nt, &c) != 1
 	    || nt <= 0)
 		do_usage(name, 1);
 
@@ -333,8 +338,8 @@ do_width(const char *name, const char *spec)
 	double re, im;
 	char ch;
 
-	if (sscanf(spec, 
-	           "%lf %c", 
+	if (sscanf(spec,
+	           "%lf %c",
 	           &width,
 	           &ch) != 1
 	    || width <= 0.0) {
@@ -445,8 +450,8 @@ pthreads_plot(void)
 		                     ? (y0 += yd)
 		                     : (y_res);
 
-		if (pthread_create(&tinfo[tn].tid, 
-		                   NULL, 
+		if (pthread_create(&tinfo[tn].tid,
+		                   NULL,
 		                   (void *)plot,
 		                   &tinfo[tn].parms) != 0) {
 			fprintf(stderr, "cannot create thread.\n");
@@ -470,8 +475,8 @@ pthreads_plot(void)
 	for (y = 0; y < parms.y_res; ++y)
 	for (x = 0; x < parms.x_res; ++x) {
 		/*
-		 * XXX Write this pixel. Try to detect stream errors as 
-		 * soon as possible. Stick with the PGM recommendation 
+		 * XXX Write this pixel. Try to detect stream errors as
+		 * soon as possible. Stick with the PGM recommendation
 		 * against lines longer than 70 chars.
 		 */
 		if ((n = fprintf(output,

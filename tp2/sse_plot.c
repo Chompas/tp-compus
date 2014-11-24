@@ -1,25 +1,25 @@
 #ifdef USE_SSE_ASSEMBLY
 /*
- * System libraries.
- */
+* System libraries.
+*/
 
 #include <stdio.h>
 #include <unistd.h>
 
 /*
- * Application libraries.
- */
+* Application libraries.
+*/
 
 #include <defs.h>
 #include <debug.h>
 #include <param.h>
 
 /* Useful constants. */
-static float FFX4[4] __attribute__ ((aligned (16))) 
+static float FFX4[4] __attribute__ ((aligned (16)))
 	= {255.0f, 255.0f, 255.0f, 255.0f};
-static float FOUR[4] __attribute__ ((aligned (16))) 
+static float FOUR[4] __attribute__ ((aligned (16)))
 	= {4.0f, 4.0f, 4.0f, 4.0f};
-static float UNIT[4] __attribute__ ((aligned (16))) 
+static float UNIT[4] __attribute__ ((aligned (16)))
 	= {1.0f, 1.0f, 1.0f, 1.0f};
 
 #define INIT4(vec, val) \
@@ -41,37 +41,37 @@ sse_plot(param_t *parms)
 	int x;
 	int y;
 
-	/* 
-	 * Barremos la región rectangular del plano complejo comprendida 
-	 * entre (parms->UL_re, parms->UL_im) y (parms->LR_re, parms->LR_im),
-	 * calculando el color de cada punto de acuerdo a la fórmula de la
-	 * recurrencia Z' = Z^2 + C
-	 * 
-	 * Nomenclatura:
-	 * 
-	 * o DX, DY representan los valores de las distancias entre pixels, 
-	 *   medidas en unidades complejas.
-	 * 
-	 * o CR0, CI0 son las coordenadas complejas del pixel superior izq.
-	 *
-	 * o ZR, ZI son valores complejos usados para calcular el fractal 
-	 *   descripto por la recurrencia de más arriba, Z = (ZR, ZI).
-	 *
-	 * o ITER contiene la cantidad de iteraciones asociadas a los pixels
-	 *   cuyas coordenadas son (CR, CI).
-	 * 
-	 * o El parámetro de iteración son los puntos (CR, CI).
-	 */
+	/*
+	* Barremos la región rectangular del plano complejo comprendida
+	* entre (parms->UL_re, parms->UL_im) y (parms->LR_re, parms->LR_im),
+	* calculando el color de cada punto de acuerdo a la fórmula de la
+	* recurrencia Z' = Z^2 + C
+	*
+	* Nomenclatura:
+	*
+	* o DX, DY representan los valores de las distancias entre pixels,
+	*   medidas en unidades complejas.
+	*
+	* o CR0, CI0 son las coordenadas complejas del pixel superior izq.
+	*
+	* o ZR, ZI son valores complejos usados para calcular el fractal
+	*   descripto por la recurrencia de más arriba, Z = (ZR, ZI).
+	*
+	* o ITER contiene la cantidad de iteraciones asociadas a los pixels
+	*   cuyas coordenadas son (CR, CI).
+	*
+	* o El parámetro de iteración son los puntos (CR, CI).
+	*/
 
 	INIT4(DX, 4.0 * parms->d_re);
 	INIT4(DY, 1.0 * parms->d_im);
 
 	/*
-	 * Inicialización de (CR0, CI0). Notar que las coordenadas de este
-	 * punto se encuentran desplazadas en 0.5 pixel, de forma tal de
-	 * hacer el cálculo con el valor complejo del punto medio.
-	 *
-	 */
+	* Inicialización de (CR0, CI0). Notar que las coordenadas de este
+	* punto se encuentran desplazadas en 0.5 pixel, de forma tal de
+	* hacer el cálculo con el valor complejo del punto medio.
+	*
+	*/
 
 	CR0[0] = parms->UL_re + 0.5f * parms->d_re;
 	CR0[1] = parms->UL_re + 1.5f * parms->d_re;
@@ -79,11 +79,11 @@ sse_plot(param_t *parms)
 	CR0[3] = parms->UL_re + 3.5f * parms->d_re;
 	INIT4(CI0, parms->UL_im - (parms->y0 + 0.5f) * parms->d_im);
 
-	/* 
-	 * u8 initialmente apunta al primer byte de la región de memoria en
-	 * donde vamos a almacenar los tonos de los pixels calculados en esta
-	 * corrida de la función.
-	 */
+	/*
+	* u8 initialmente apunta al primer byte de la región de memoria en
+	* donde vamos a almacenar los tonos de los pixels calculados en esta
+	* corrida de la función.
+	*/
 	u8 = parms->bitmap + parms->y0 * parms->x_res;
 
 	__asm__ volatile (
@@ -105,6 +105,7 @@ sse_plot(param_t *parms)
 		);
 
 		for (x = 0; x < parms->x_res; x += 4) {
+			//fprintf(stderr,"zr %3.2f zi %3.2f \n",*CR,*CI);
 			__asm__ volatile (
 			"initialize:             \n\t"
 			"xorps    %%xmm0, %%xmm0 \n\t" /* xmm0: ITER */
@@ -135,36 +136,54 @@ sse_plot(param_t *parms)
 			"increment:              \n\t"
 			"addps    %%xmm1, %%xmm0 \n\t" /* xmm0: ITER */
 
-			/* Calculate Z = Z^2 + C. */
-			"Z_eq_Z2_plus_C:         \n\t"
-			"subps    %%xmm5, %%xmm4 \n\t" /* xmm4: ZR^2 - ZI^2 */
-
+			/* Calculate Z = Z^3 + C. */
+			"Z_eq_Z3_plus_C:         \n\t"
 			"movaps   %%xmm2, %%xmm6 \n\t" /* xmm6: ZR */
-			"mulps    %%xmm3, %%xmm6 \n\t" /* xmm6: ZR*ZI */
-			"addps    %%xmm6, %%xmm6 \n\t" /* xmm6: 2*ZR*ZI */
+			"mulps    %%xmm2, %%xmm6 \n\t" /* xmm6: ZR*ZR */
+			"mulps    %%xmm2, %%xmm6 \n\t" /* xmm6: ZR*ZR*ZR */
 
-			"addps    %3, %%xmm4     \n\t" /* xmm4: += CR */
-			"addps    %4, %%xmm6     \n\t" /* xmm6: += CI */
-			"movaps   %%xmm4, %%xmm2 \n\t" /* xmm2: new ZR */
-			"movaps   %%xmm6, %%xmm3 \n\t" /* xmm3: new ZI */
+			"movaps   %%xmm3, %%xmm5 \n\t" /* xmm5: ZI */
+			"mulps	  %%xmm3, %%xmm5 \n\t" /* xmm5: ZI*ZI */
+			"mulps    %%xmm2, %%xmm5 \n\t" /* xmm5: ZI*ZI*ZR */
+			"movaps   %%xmm5, %%xmm4 \n\t" /* xmm4: ZI*ZI*ZR */
+			"addps    %%xmm4, %%xmm5 \n\t" /* xmm5: 2*ZI*ZI*ZR */
+			"addps    %%xmm4, %%xmm5 \n\t" /* xmm5: 3*ZI*ZI*ZR */
+			"subps    %%xmm5, %%xmm6 \n\t" /* xmm6: ZR*ZR*ZR - 3*ZI*ZI*ZR */
+
+			"movaps   %%xmm2, %%xmm5 \n\t" /* xmm5: ZR */
+			"mulps    %%xmm2, %%xmm5 \n\t" /* xmm5: ZR*ZR */
+			"mulps    %%xmm3, %%xmm5 \n\t" /* xmm5: ZR*ZR*ZI */
+			"movaps   %%xmm5, %%xmm7 \n\t" /* xmm7: ZR*ZR*ZI */
+			"addps    %%xmm5, %%xmm7 \n\t" /* xmm7: 2*ZR*ZR*ZI */
+			"addps    %%xmm5, %%xmm7 \n\t" /* xmm7: 3*ZR*ZR*ZI */
+
+			"movaps   %%xmm3, %%xmm5 \n\t" /* xmm5: ZI */
+			"mulps   	%%xmm3, %%xmm5 \n\t" /* xmm5: ZI*ZI */
+			"mulps   	%%xmm3, %%xmm5 \n\t" /* xmm5: ZI*ZI*ZI */
+			"subps    %%xmm5, %%xmm7 \n\t" /* xmm7: 3*ZR*ZR*ZI - ZI*ZI*ZI */
+
+			"addps    %3, %%xmm6     \n\t" /* xmm6: += CR */
+			"addps    %4, %%xmm7     \n\t" /* xmm7: += CI */
+			"movaps   %%xmm6, %%xmm2 \n\t" /* xmm2: new ZR */
+			"movaps   %%xmm7, %%xmm3 \n\t" /* xmm3: new ZI */
 
 			"jmp      loop           \n\t"
 
 			/*
-			 * Escribimos los tonos de los pixels en la región de
-			 * memoria correspondiente.
-			 * 
-			 * En este momento, la cantidad de iteraciones de cada
-			 * pixel se encuentra en un registro de punto flotante
-			 * XMM. Necesitamos convertir estos vamores a entero y
-			 * luego almacenarlos en memoria.
-			 */
+			* Escribimos los tonos de los pixels en la región de
+			* memoria correspondiente.
+			*
+			* En este momento, la cantidad de iteraciones de cada
+			* pixel se encuentra en un registro de punto flotante
+			* XMM. Necesitamos convertir estos vamores a entero y
+			* luego almacenarlos en memoria.
+			*/
 			"cast_output:            \n\t"
 			"movaps   %%xmm0, %%xmm1 \n\t" /* xmm1: final ITER */
 			"shufps   $0x4e, %%xmm1, %%xmm1 \n\t" /* 0100 1110 */
 			"cvtps2pi %%xmm0, %%mm0  \n\t"
 			"cvtps2pi %%xmm1, %%mm1  \n\t"
-			
+
 			"write_px:               \n\t"
 			"movd     %%mm0, %%eax   \n\t"
 			"movb     %%al, (%0)     \n\t"
@@ -188,19 +207,19 @@ sse_plot(param_t *parms)
 #endif
 
 			: "=r" (u8),      /* %0 */
-			  "=m" (ZR),      /* %1 */
-			  "=m" (ZI)       /* %2 */
+				"=m" (ZR),      /* %1 */
+				"=m" (ZI)       /* %2 */
 			: "m" (*CR),      /* %3 */
-			  "m" (*CI),      /* %4 */
-			  "m" (*ITER),    /* %5 */
-			  "m" (*FOUR),    /* %6 */
-			  "0" (u8),       /* %7 */
-			  "m" (*FFX4),    /* %8 */
-			  "m" (*UNIT)     /* %9 */
-			: "xmm0", "xmm1", "xmm2", "xmm3", 
-			  "xmm4", "xmm5", "xmm6", "xmm7",
-			  "mm0", "mm1", "eax", "ebx",
-			  "cc", "memory"
+				"m" (*CI),      /* %4 */
+				"m" (*ITER),    /* %5 */
+				"m" (*FOUR),    /* %6 */
+				"0" (u8),       /* %7 */
+				"m" (*FFX4),    /* %8 */
+				"m" (*UNIT)     /* %9 */
+			: "xmm0", "xmm1", "xmm2", "xmm3",
+				"xmm4", "xmm5", "xmm6", "xmm7",
+				"mm0", "mm1", "eax", "ebx",
+				"cc", "memory"
 			);
 
 			__asm__ volatile (
