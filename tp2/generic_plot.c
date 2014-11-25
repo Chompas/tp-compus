@@ -21,10 +21,12 @@ generic_plot(param_t *parms)
 	 * El par�metro de iteraci�n es el punto (cr, ci).
 	 */
 
-	ci = parms->UL_im - parms->y0 * parms->d_im;
-	u8 = parms->bitmap + parms->y0 * parms->x_res;
+	/*ci = parms->UL_im - parms->y0 * parms->d_im;
+	u8 = parms->bitmap + parms->y0 * parms->x_res;*/
 
-	for (y = parms->y0; y < parms->y1; ++y) {
+	for (y = parms->y0; y < parms->y1; y += parms->nthreads) {
+		ci = parms->UL_im - y * parms->d_im;
+		u8 = parms->bitmap + y * parms->x_res;
 		cr = parms->UL_re;
 
 		for (x = 0; x < parms->x_res; ++x) {

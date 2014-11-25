@@ -15,6 +15,7 @@ typedef struct {
 
 	size_t y0;
 	size_t y1;
+	size_t nthreads;
 
 	uint8_t *bitmap;
 } param_t;

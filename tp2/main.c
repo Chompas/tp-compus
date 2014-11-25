@@ -407,8 +407,6 @@ pthreads_plot(void)
 	size_t length = 0;
 	param_t parms;
 	uint8_t *u8;
-	size_t y0;
-	size_t yd;
 	size_t tn;
 	size_t y;
 	size_t x;
@@ -426,6 +424,7 @@ pthreads_plot(void)
 	parms.shades = 255;
 	parms.y0 = 0;
 	parms.y1 = y_res;
+	parms.nthreads = nthreads;
 
 #ifndef SZ
 #define SZ(x) sizeof(x)
@@ -441,15 +440,11 @@ pthreads_plot(void)
 		exit(1);
 	}
 
-	y0 = 0;
-	yd = y_res / nthreads;
-
 	for (tn = 0; tn < nthreads; ++tn) {
 		memcpy(&tinfo[tn].parms, &parms, SZ(parms));
-		tinfo[tn].parms.y0 = y0;
-		tinfo[tn].parms.y1 = tn < nthreads - 1
-		                     ? (y0 += yd)
-		                     : (y_res);
+		tinfo[tn].parms.y0 = tn;
+		tinfo[tn].parms.y1 = y_res;
+		tinfo[tn].parms.nthreads = nthreads;
 
 		if (pthread_create(&tinfo[tn].tid,
 		                   NULL,

@@ -40,12 +40,13 @@ sse_plot(param_t *parms)
 	int ITER[4] __attribute__ ((aligned (16)));
 	int x;
 	int y;
+	int n = parms->nthreads;
 
 	/*
 	* Barremos la región rectangular del plano complejo comprendida
 	* entre (parms->UL_re, parms->UL_im) y (parms->LR_re, parms->LR_im),
 	* calculando el color de cada punto de acuerdo a la fórmula de la
-	* recurrencia Z' = Z^2 + C
+	* recurrencia Z' = Z^3 + C
 	*
 	* Nomenclatura:
 	*
@@ -66,35 +67,34 @@ sse_plot(param_t *parms)
 	INIT4(DX, 4.0 * parms->d_re);
 	INIT4(DY, 1.0 * parms->d_im);
 
-	/*
-	* Inicialización de (CR0, CI0). Notar que las coordenadas de este
-	* punto se encuentran desplazadas en 0.5 pixel, de forma tal de
-	* hacer el cálculo con el valor complejo del punto medio.
-	*
-	*/
+	for (y = parms->y0; y < parms->y1; y += n) {
 
-	CR0[0] = parms->UL_re + 0.5f * parms->d_re;
-	CR0[1] = parms->UL_re + 1.5f * parms->d_re;
-	CR0[2] = parms->UL_re + 2.5f * parms->d_re;
-	CR0[3] = parms->UL_re + 3.5f * parms->d_re;
-	INIT4(CI0, parms->UL_im - (parms->y0 + 0.5f) * parms->d_im);
+		/*
+		* Inicialización de (CR0, CI0). Notar que las coordenadas de este
+		* punto se encuentran desplazadas en 0.5 pixel, de forma tal de
+		* hacer el cálculo con el valor complejo del punto medio.
+		*
+		*/
+		CR0[0] = parms->UL_re + 0.5f * parms->d_re;
+		CR0[1] = parms->UL_re + 1.5f * parms->d_re;
+		CR0[2] = parms->UL_re + 2.5f * parms->d_re;
+		CR0[3] = parms->UL_re + 3.5f * parms->d_re;
+		INIT4(CI0, parms->UL_im - (y + 0.5f) * parms->d_im);
+		/*
+		* u8 initialmente apunta al primer byte de la región de memoria en
+		* donde vamos a almacenar los tonos de los pixels calculados en esta
+		* corrida de la función.
+		*/
+		u8 = parms->bitmap + y * parms->x_res;
 
-	/*
-	* u8 initialmente apunta al primer byte de la región de memoria en
-	* donde vamos a almacenar los tonos de los pixels calculados en esta
-	* corrida de la función.
-	*/
-	u8 = parms->bitmap + parms->y0 * parms->x_res;
+		__asm__ volatile (
+		"movaps    %1, %%xmm0 \n\t"
+		"movaps    %%xmm0, %0 \n\t"
+		: "=m" (CI)  /* %0 */
+		: "m" (*CI0) /* %1 */
+		: "xmm0"
+		);
 
-	__asm__ volatile (
-	"movaps    %1, %%xmm0 \n\t"
-	"movaps    %%xmm0, %0 \n\t"
-	: "=m" (CI)  /* %0 */
-	: "m" (*CI0) /* %1 */
-	: "xmm0"
-	);
-
-	for (y = parms->y0; y < parms->y1; ++y) {
 		__asm__ volatile (
 		"CR_eq_CR0:              \n\t"
 		"movaps   %1, %%xmm0     \n\t"
@@ -105,7 +105,6 @@ sse_plot(param_t *parms)
 		);
 
 		for (x = 0; x < parms->x_res; x += 4) {
-			//fprintf(stderr,"zr %3.2f zi %3.2f \n",*CR,*CI);
 			__asm__ volatile (
 			"initialize:             \n\t"
 			"xorps    %%xmm0, %%xmm0 \n\t" /* xmm0: ITER */
